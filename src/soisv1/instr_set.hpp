@@ -7,29 +7,12 @@
 #include "regs.hpp"
 
 namespace SOASM::SOISv1{
-	using namespace InstrArgs;
+	using namespace InstrArgTypes;
 	using namespace Regs;
 	using instr_t = uint8_t;
 
 	template<typename T,typename ...Args>
-	struct Instr{
-		using args = std::tuple<Args...>;
-		struct InstrArg{
-			using type = T;
-			T instr;
-			std::vector<instr_t> args;
-			auto operator()(instr_t id){
-				instr.id=id;
-				args.insert(args.begin(),std::bit_cast<instr_t>(instr));
-				return args;
-			}
-		};
-		auto operator()(Args... args){
-			InstrArg instr{*static_cast<T*>(this)};
-			(std::ranges::move(args.get_bytes(), std::back_inserter(instr.args)),...);
-			return instr;
-		}
-	};
+	using Instr=InstrSet::InstrBase<instr_t,T,Args...>;
 
 	struct LoadFar:Instr<LoadFar,LE::i16>{//load value(8) from address(16) with offset(16) and push to stack
 		static constexpr std::string_view name="LoadFar";

@@ -10,7 +10,7 @@
 #include <ranges>
 
 namespace SOASM{
-	namespace InstrArgs{
+	namespace InstrArgTypes{
 		template<bool IsBE,bool IsSigned,size_t Size>
 		struct Int{
 			static constexpr bool is_big_endian=IsBE;
@@ -47,8 +47,29 @@ namespace SOASM{
 			using u32 = Int<true,false,4>;
 			using u64 = Int<true,false,8>;
 		} // BE
-	} // InstrArgs
+	} // InstrArgTypes
+	
 	namespace InstrSet{
+		template<typename instr_t,typename T,typename ...Args>
+		struct InstrBase{
+			using args = std::tuple<Args...>;
+			struct InstrArg{
+				using type = T;
+				T instr;
+				std::vector<instr_t> args;
+				auto operator()(instr_t id){
+					instr.id=id;
+					args.insert(args.begin(),std::bit_cast<instr_t>(instr));
+					return args;
+				}
+			};
+			auto operator()(Args... args){
+				InstrArg instr{*static_cast<T*>(this)};
+				(std::ranges::move(args.get_bytes(), std::back_inserter(instr.args)),...);
+				return instr;
+			}
+		};
+
 		template<typename T>
 		static constexpr size_t opt_width(){
 			if constexpr (std::is_enum_v<T>){
