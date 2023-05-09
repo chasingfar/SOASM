@@ -3,16 +3,16 @@
 #define SOASM_SOISV1_INSTR_SET_HPP
 
 #include <cstddef>
+#include "../asm.hpp"
 #include "../instr_set.hpp"
 #include "regs.hpp"
 
 namespace SOASM::SOISv1{
-	using namespace InstrArgTypes;
+	using namespace RawTypes;
 	using namespace Regs;
-	using instr_t = uint8_t;
 
 	template<typename T,typename ...Args>
-	using Instr=InstrSet::InstrBase<instr_t,T,Args...>;
+	using Instr=InstrBase<u8,T,Args...>;
 
 	struct LoadFar:Instr<LoadFar,LE::i16>{//load value(8) from address(16) with offset(16) and push to stack
 		static constexpr std::string_view name="LoadFar";
@@ -66,7 +66,7 @@ namespace SOASM::SOISv1{
 	};
 	struct Calc:Instr<Calc>{
 		static constexpr std::string_view name="Calc";
-		enum struct FN:instr_t{
+		enum struct FN:raw_t{
 			SHL, SHR,
 			RCL, RCR,
 			ADD, SUB,
@@ -78,7 +78,7 @@ namespace SOASM::SOISv1{
 	};
 	struct Logic:Instr<Logic>{
 		static constexpr std::string_view name="Logic";
-		enum struct FN:instr_t{
+		enum struct FN:raw_t{
 			NOT,
 			AND,
 			OR ,
@@ -167,7 +167,7 @@ namespace SOASM::SOISv1{
 
 	
 	struct INTCall:Instr<INTCall>{
-		static constexpr instr_t reserve_id=0xCD;
+		static constexpr raw_t reserve_id=0xCD;
 		static constexpr std::string_view name="INTCall";
 		
 		#define X_OPTS
@@ -175,7 +175,7 @@ namespace SOASM::SOISv1{
 	};
 	
 	struct Init:Instr<Init>{
-		static constexpr instr_t reserve_id=0x00;
+		static constexpr raw_t reserve_id=0x00;
 		static constexpr std::string_view name="Init";
 		
 		#define X_OPTS
@@ -183,7 +183,7 @@ namespace SOASM::SOISv1{
 	};
 	
 	struct Halt:Instr<Halt>{
-		static constexpr instr_t reserve_id=0xFF;
+		static constexpr raw_t reserve_id=0xFF;
 		static constexpr std::string_view name="Halt";
 		
 		#define X_OPTS
@@ -197,7 +197,7 @@ namespace SOASM::SOISv1{
 		#include "../x_opts.inc"
 	};
 	using InstrSet=InstrSet::InstrSet<
-		instr_t,Unknown,
+		u8::type,Unknown,
 		Init,
 		INTCall,
 		LoadFar,SaveFar,

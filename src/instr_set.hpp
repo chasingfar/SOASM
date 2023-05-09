@@ -10,66 +10,7 @@
 #include <ranges>
 
 namespace SOASM{
-	namespace InstrArgTypes{
-		template<bool IsBE,bool IsSigned,size_t Size>
-		struct Int{
-			static constexpr bool is_big_endian=IsBE;
-			static constexpr bool is_signed=IsSigned;
-			static constexpr size_t size=Size;
-
-			unsigned long long val;
-			Int(std::integral auto val):val(val){}
-			auto get_bytes() const{
-				using namespace std::views;
-				std::array<uint8_t,Size> arr;
-				for(auto&& [a,offset]:zip(arr,iota(0uz,Size)|transform([](size_t i){return 8*(IsBE?Size-i-1:i);}))){
-					a=(val>>offset)&0xff;
-				}
-				return arr;
-			}
-		};
-
-		using i8 =Int<false,true ,1>;
-		using u8 =Int<false,false,1>;
-		namespace LE{
-			using i16 = Int<false,true ,2>;
-			using i32 = Int<false,true ,4>;
-			using i64 = Int<false,true ,8>;
-			using u16 = Int<false,false,2>;
-			using u32 = Int<false,false,4>;
-			using u64 = Int<false,false,8>;
-		} // LE
-		namespace BE{
-			using i16 = Int<true,true ,2>;
-			using i32 = Int<true,true ,4>;
-			using i64 = Int<true,true ,8>;
-			using u16 = Int<true,false,2>;
-			using u32 = Int<true,false,4>;
-			using u64 = Int<true,false,8>;
-		} // BE
-	} // InstrArgTypes
-	
 	namespace InstrSet{
-		template<typename instr_t,typename T,typename ...Args>
-		struct InstrBase{
-			using args = std::tuple<Args...>;
-			struct InstrArg{
-				using type = T;
-				T instr;
-				std::vector<instr_t> args;
-				auto operator()(instr_t id){
-					instr.id=id;
-					args.insert(args.begin(),std::bit_cast<instr_t>(instr));
-					return args;
-				}
-			};
-			auto operator()(Args... args){
-				InstrArg instr{*static_cast<T*>(this)};
-				(std::ranges::move(args.get_bytes(), std::back_inserter(instr.args)),...);
-				return instr;
-			}
-		};
-
 		template<typename T>
 		static constexpr size_t opt_width(){
 			if constexpr (std::is_enum_v<T>){
@@ -99,6 +40,7 @@ namespace SOASM{
 
 		template<typename instr_t,typename Unknown,typename ...T>
 		struct InstrSet{
+			using instr_ts=std::variant<T...>;
 			static constexpr auto get_reserved_ids(){
 				std::vector<std::pair<size_t,size_t>> reserved_ids;
 				([&]<typename V>(V){
@@ -150,20 +92,6 @@ namespace SOASM{
 			static bool is_instr(instr_t instr){
 				return get_id<U>()==to_instr<U>(instr).id;
 			}
-
-			static auto gen(auto cfg){
-				bool is_found=([&cfg]<typename V>(V){
-					if(is_instr<V>(cfg.arg.instr)){
-						cfg.gen(to_instr<V>(cfg.arg.instr));
-						return true;
-					}
-					return false;
-				}(T{})||...);
-				if(!is_found){
-					cfg.gen(to_instr<Unknown>(cfg.arg.instr));
-				}
-				return cfg;
-			}
 			
 			template<instr_t instr>
 			using get_instr=decltype(std::tuple_cat(
@@ -191,27 +119,8 @@ namespace SOASM{
 					std::tuple{T::name,get_id<T>(),T::optw}...
 				};
 			}
-			
-			struct Instrs{
-				std::vector<instr_t> data;
-				template<typename ...U>
-				Instrs(U... instr){
-					(std::ranges::move(instr(get_id<typename U::type>()), std::back_inserter(data)),...);
-				}
-				auto begin(){return data.begin();}
-				auto end(){return data.end();}
-				auto begin() const{return data.begin();}
-				auto end() const{return data.end();}
-			};
 		};
 
 	} // InstrSet
 } // SOASM
-namespace SOASM::InstrSet{
-
-
-
-
-} // SOASM::InstrSet
-
 #endif //SOASM_INSTR_SET_HPP
