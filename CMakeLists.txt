@@ -11,4 +11,7 @@ CPMAddPackage("gh:Neargye/magic_enum@0.8.2")
 include_directories("${magic_enum_SOURCE_DIR}/include")
 
 include_directories(include)
+add_library(soisv1 src/soisv1/model.cpp)
+
 add_executable(soasm main.cpp)
+target_link_libraries(soasm soisv1)
