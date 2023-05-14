@@ -10,40 +10,40 @@ template<> void Context::run(Init instr) {
 	sp=0xFFFF;
 	pc=0;
 }
-template<> void Context::run(LoadFar instr){
-	push(mem.get(imm<uint16_t>()+reg.get(instr.from)));
+template<> void Context::run(LoadFar instr,int16_t offset){
+	push<u8>(mem.get(reg.get(instr.from)+offset));
 	pc++;
 }
-template<> void Context::run(SaveFar instr) {
-	mem.set(imm<uint16_t>()+reg.get(instr.to),pop<uint8_t>());
+template<> void Context::run(SaveFar instr,int16_t offset) {
+	mem.set(reg.get(instr.to)+offset,pop<u8>());
 	pc++;
 }
-template<> void Context::run(LoadNear instr) {
-	push(mem.get(imm<int8_t>()+reg.get(instr.from)));
+template<> void Context::run(LoadNear instr,int8_t offset) {
+	push<u8>(mem.get(reg.get(instr.from)+offset));
 	pc++;
 }
-template<> void Context::run(SaveNear instr) {
-	mem.set(imm<int8_t>()+reg.get(instr.to),pop<uint8_t>());
+template<> void Context::run(SaveNear instr,int8_t offset) {
+	mem.set(reg.get(instr.to)+offset,pop<u8>());
 	pc++;
 }
 template<> void Context::run(Load instr) {
-	push(mem.get(reg.get(instr.from)));
+	push<u8>(mem.get(reg.get(instr.from)));
 	pc++;
 }
 template<> void Context::run(Save instr) {
-	mem.set(reg.get(instr.to),pop<uint8_t>());
+	mem.set(reg.get(instr.to),pop<u8>());
 	pc++;
 }
-template<> void Context::run(SaveImm instr) {
-	mem.set(reg.get(instr.to),imm<uint8_t>());
+template<> void Context::run(SaveImm instr,uint8_t val) {
+	mem.set(reg.get(instr.to),val);
 	pc++;
 }
 template<> void Context::run(Push instr) {
-	push(reg.get(instr.from));
+	push<u8>(reg.get(instr.from));
 	pc++;
 }
 template<> void Context::run(Pop instr) {
-	reg.set(instr.to,pop<uint8_t>());
+	reg.set(instr.to,pop<u8>());
 	pc++;
 }
 
@@ -63,8 +63,8 @@ inline std::pair<uint8_t,bool> sub(uint8_t l,uint8_t r,bool carry=true){
 
 template<> void Context::run(Calc instr) {
 	uint8_t lhs,rhs,val;
-#define ARG_1 rhs=pop<uint8_t>();
-#define ARG_2 ARG_1 lhs=pop<uint8_t>();
+#define ARG_1 rhs=pop<u8>();
+#define ARG_2 ARG_1 lhs=pop<u8>();
 #define CALC_1(fn,name)  case Calc::FN::fn: ARG_1 std::tie(val,CF)=name(rhs);break;
 #define CALC_1C(fn,name) case Calc::FN::fn: ARG_1 std::tie(val,CF)=name(rhs,CF);break;
 #define CALC_2(fn,name)  case Calc::FN::fn: ARG_2 std::tie(val,CF)=name(lhs,rhs);break;
@@ -85,15 +85,15 @@ template<> void Context::run(Calc instr) {
 #undef CALC_1C
 #undef CALC_2
 #undef CALC_2C
-	push(val);
+	push<u8>(val);
 	pc++;
 }
 template<> void Context::run(Logic instr) {
 
-#define ARG_1 uint8_t rhs=pop<uint8_t>();
-#define ARG_2 ARG_1 uint8_t lhs=pop<uint8_t>();
-#define LOGIC_1(fn,name)  case Logic::FN::fn: {ARG_1 push(name rhs);break;}
-#define LOGIC_2(fn,name)  case Logic::FN::fn: {ARG_2 push(lhs name rhs);break;}
+#define ARG_1 uint8_t rhs=pop<u8>();
+#define ARG_2 ARG_1 uint8_t lhs=pop<u8>();
+#define LOGIC_1(fn,name)  case Logic::FN::fn: {ARG_1 push<u8>(name rhs);break;}
+#define LOGIC_2(fn,name)  case Logic::FN::fn: {ARG_2 push<u8>(lhs name rhs);break;}
 	switch (instr.fn){
 		LOGIC_1(NOT,~)
 		LOGIC_2(AND,&)
@@ -106,45 +106,42 @@ template<> void Context::run(Logic instr) {
 #undef LOGIC_2
 	pc++;
 }
-template<> void Context::run(BranchCF instr) {
-	auto addr=imm<uint16_t>();
+template<> void Context::run(BranchCF instr,uint16_t addr) {
 	pc=CF?addr:pc+1;
 }
-template<> void Context::run(BranchZero instr) {
-	auto addr=imm<uint16_t>();
-	pc=(pop<uint8_t>()==0)?addr:pc+1;
+template<> void Context::run(BranchZero instr,uint16_t addr) {
+	pc=(pop<u8>()==0)?addr:pc+1;
 }
-template<> void Context::run(Jump instr) {
-	pc=imm<uint16_t>();
+template<> void Context::run(Jump instr,uint16_t addr) {
+	pc=addr;
 }
-template<> void Context::run(ImmVal instr) {
-	push(imm<uint8_t>());
+template<> void Context::run(ImmVal instr,uint8_t val) {
+	push<u8>(val);
 	pc++;
 }
-template<> void Context::run(Call instr) {
-	auto addr=imm<uint16_t>();
-	push(++pc);
+template<> void Context::run(Call instr,uint16_t addr) {
+	push<LE::u16>(++pc);
 	pc=addr;
 }
 template<> void Context::run(CallPtr instr) {
-	push(++pc);
-	pc=pop<uint16_t>();
+	push<LE::u16>(++pc);
+	pc=pop<LE::u16>();
 }
 template<> void Context::run(Return instr) {
-	pc=pop<uint16_t>();
+	pc=pop<LE::u16>();
 }
-template<> void Context::run(Adjust instr) {
-	sp+=imm<int16_t>();
+template<> void Context::run(Adjust instr,int16_t offset) {
+	sp+=offset;
 	pc++;
 }
 template<> void Context::run(Enter instr) {
-	push(reg.get(instr.bp));
+	push<LE::u16>(reg.get(instr.bp));
 	reg.set(instr.bp,sp);
 	pc++;
 }
 template<> void Context::run(Leave instr) {
 	sp=reg.get(instr.bp);
-	reg.set(instr.bp,pop<uint16_t>());
+	reg.set(instr.bp,pop<LE::u16>());
 	pc++;
 }
 template<> void Context::run(Halt instr) {
@@ -157,4 +154,30 @@ template<> void Context::run(INTCall instr) {
 	//stack_push(MReg16::PC);
 	//load_imm(MReg16::PC,arg.isINT());
 	//jump(MReg16::TMP);
+}
+
+
+template<typename T,size_t I>
+using arg_raw=std::tuple_element_t<I,typename T::args>;
+template<typename T,size_t I>
+using arg_raw_t=arg_raw<T,I>::type;
+template<typename T>
+static constexpr size_t arg_raw_num=std::tuple_size_v<typename T::args>;
+
+bool Context::run_instr() {
+	auto pc_old=pc;
+	InstrSet::visit([&]<typename T>(T instr_obj){
+		if constexpr(0==arg_raw_num<T>){
+			run(instr_obj);
+		}else{
+			[&]<size_t ...I>(std::index_sequence<I...>){
+				std::array<std::variant<arg_raw_t<T,I>...>,arg_raw_num<T>> args{
+					arg_raw_t<T,I>{0}...
+				};
+				((args[I]=imm<arg_raw<T,I>>()),...);
+				run(instr_obj,std::get<arg_raw_t<T,I>>(args[I])...);
+			}(std::make_index_sequence<arg_raw_num<T>>{});
+		}
+	},mem.get(pc));
+	return pc_old!=pc;
 }

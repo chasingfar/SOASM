@@ -7,7 +7,7 @@
 #include <map>
 #include <ranges>
 #include "../memory.hpp"
-#include "regs.hpp"
+#include "instr_set.hpp"
 
 namespace SOASM::SOISv1{
 	struct Context{
@@ -19,29 +19,30 @@ namespace SOASM::SOISv1{
 		bool CF=true;
 		Regs::RegFile reg;
 
-		template<typename Instr>
-		void run(Instr);
+		template<typename Instr,typename ...Args>
+		void run(Instr,Args...);
+		bool run_instr();
 
 		template<typename T>
-		T imm(){
-			T v=0;
-			for(size_t i:std::views::iota(0uz,sizeof(T))){
-				v|=mem.get(++pc)<<i;
+		T::type imm(){
+			std::array<uint8_t,T::size> data;
+			for(auto&& d:data){
+				d=mem.get(++pc);
 			}
-			return v;
+			return T::from_bytes(data);
 		}
 		template<typename T>
-		T pop(){
-			T v=0;
-			for(size_t i:std::views::iota(0uz,sizeof(T))){
-				v|=static_cast<T>(mem.get(++sp))<<i;
+		T::type pop(){
+			std::array<uint8_t,T::size> data;
+			for(auto&& d:data){
+				d=mem.get(++sp);
 			}
-			return v;
+			return T::from_bytes(data);
 		}
 		template<typename T>
-		void push(T v){
-			for(size_t i:std::views::iota(0uz,sizeof(T))|std::views::reverse){
-				mem.set(sp--,(v>>i)&0xff);
+		void push(T::type v){
+			for(auto d:T::to_bytes(v)|std::views::reverse){
+				mem.set(sp--,d);
 			}
 		}
 

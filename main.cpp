@@ -36,19 +36,15 @@ int main(){
 
     Context ctx{mem};
 	for(int i=0;i<50;i++){
-		auto pc_old=ctx.pc;
-        SOISv1::InstrSet::visit([&](auto instr_obj){
-            ctx.run(instr_obj);
-        },ctx.mem.get(ctx.pc));
-
-        for(auto v:ctx.reg.regs){
-            std::cout<<(int)v<<" ";
-        }
-        std::cout<<std::endl;
-		if(pc_old==ctx.pc){
+		if(!ctx.run_instr()){
         	std::cout<<"halt"<<std::endl;
 			break;
 		}
+        std::cout<<i<<":";
+        for(auto v:ctx.reg.regs){
+            std::cout<<" "<<(int)v;
+        }
+        std::cout<<std::endl;
 	}
     return 0;
 }

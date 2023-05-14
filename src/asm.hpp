@@ -58,27 +58,35 @@ namespace SOASM{
 
 			std::variant<unsigned long long,Lazy> val;
 			Int(std::integral auto val):val(static_cast<unsigned long long>(val)){}
-			Int(std::span<uint8_t> bytes):val(0ull){
+			Int(std::span<uint8_t> bytes):val(from_bytes(bytes)){}
+			Int(Lazy lazy):val(lazy){}
+			Int(Label label):val(label.lazy()){}
+			static auto from_bytes(std::span<uint8_t> bytes){
 				unsigned long long v=0;
 				for(auto&& [byte_val,offset]:std::views::zip(bytes,offsets)){
 					v|=(byte_val&0xffull)<<offset;
 				}
-				val=v;
+				return v;
 			}
-			Int(Lazy lazy):val(lazy){}
-			Int(Label label):val(label.lazy()){}
+			static auto to_bytes(unsigned long long v){
+				std::array<uint8_t,Size> bytes;
+				for(auto&& [byte_val,offset]:std::views::zip(bytes,offsets)){
+					byte_val=static_cast<uint8_t>((v>>offset)&0xff);
+				}
+				return bytes;
+			}
+			static auto to_bytes(const Lazy& v){
+				std::array<Lazy,Size> bytes;
+				for(auto&& [byte_val,offset]:std::views::zip(bytes,offsets)){
+					byte_val=v;
+					byte_val.offset=offset;
+				}
+				return bytes;
+			}
 			auto may_lazys() const{
 				return std::visit([](auto v){
 					std::array<may_lazy_t,Size> bytes;
-					for(auto&& [byte_val,offset]:std::views::zip(bytes,offsets)){
-						if constexpr(std::is_same_v<decltype(v),Lazy>){
-							Lazy lazy=v;
-							lazy.offset=offset;
-							byte_val=lazy;
-						}else{
-							byte_val=static_cast<uint8_t>((v>>offset)&0xff);
-						}
-					}
+					std::ranges::move(to_bytes(v),bytes.begin());
 					return bytes;
 				},val);
 			}
