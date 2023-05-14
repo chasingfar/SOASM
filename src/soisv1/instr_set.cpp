@@ -4,46 +4,46 @@
 
 using namespace SOASM::SOISv1;
 
-template<> void Context::run(Unknown instr) {
+template<> void Context::run_instr(Unknown instr) {
 	pc++;
 }
-template<> void Context::run(Init instr) {
+template<> void Context::run_instr(Init instr) {
 	sp=0xFFFF;
 	pc=0;
 }
-template<> void Context::run(LoadFar instr,int16_t offset){
+template<> void Context::run_instr(LoadFar instr,int16_t offset){
 	push<u8>(mem.get(reg.get(instr.from)+offset));
 	pc++;
 }
-template<> void Context::run(SaveFar instr,int16_t offset) {
+template<> void Context::run_instr(SaveFar instr,int16_t offset) {
 	mem.set(reg.get(instr.to)+offset,pop<u8>());
 	pc++;
 }
-template<> void Context::run(LoadNear instr,int8_t offset) {
+template<> void Context::run_instr(LoadNear instr,int8_t offset) {
 	push<u8>(mem.get(reg.get(instr.from)+offset));
 	pc++;
 }
-template<> void Context::run(SaveNear instr,int8_t offset) {
+template<> void Context::run_instr(SaveNear instr,int8_t offset) {
 	mem.set(reg.get(instr.to)+offset,pop<u8>());
 	pc++;
 }
-template<> void Context::run(Load instr) {
+template<> void Context::run_instr(Load instr) {
 	push<u8>(mem.get(reg.get(instr.from)));
 	pc++;
 }
-template<> void Context::run(Save instr) {
+template<> void Context::run_instr(Save instr) {
 	mem.set(reg.get(instr.to),pop<u8>());
 	pc++;
 }
-template<> void Context::run(SaveImm instr,uint8_t val) {
+template<> void Context::run_instr(SaveImm instr,uint8_t val) {
 	mem.set(reg.get(instr.to),val);
 	pc++;
 }
-template<> void Context::run(Push instr) {
+template<> void Context::run_instr(Push instr) {
 	push<u8>(reg.get(instr.from));
 	pc++;
 }
-template<> void Context::run(Pop instr) {
+template<> void Context::run_instr(Pop instr) {
 	reg.set(instr.to,pop<u8>());
 	pc++;
 }
@@ -62,7 +62,7 @@ inline std::pair<uint8_t,bool> sub(uint8_t l,uint8_t r,bool carry=true){
 	return add(l,~r,carry);
 }
 
-template<> void Context::run(Calc instr) {
+template<> void Context::run_instr(Calc instr) {
 	uint8_t lhs,rhs,val;
 #define ARG_1 rhs=pop<u8>();
 #define ARG_2 ARG_1 lhs=pop<u8>();
@@ -89,7 +89,7 @@ template<> void Context::run(Calc instr) {
 	push<u8>(val);
 	pc++;
 }
-template<> void Context::run(Logic instr) {
+template<> void Context::run_instr(Logic instr) {
 
 #define ARG_1 uint8_t rhs=pop<u8>();
 #define ARG_2 ARG_1 uint8_t lhs=pop<u8>();
@@ -107,48 +107,48 @@ template<> void Context::run(Logic instr) {
 #undef LOGIC_2
 	pc++;
 }
-template<> void Context::run(BranchCF instr,uint16_t addr) {
+template<> void Context::run_instr(BranchCF instr,uint16_t addr) {
 	pc=CF?addr:pc+1;
 }
-template<> void Context::run(BranchZero instr,uint16_t addr) {
+template<> void Context::run_instr(BranchZero instr,uint16_t addr) {
 	pc=(pop<u8>()==0)?addr:pc+1;
 }
-template<> void Context::run(Jump instr,uint16_t addr) {
+template<> void Context::run_instr(Jump instr,uint16_t addr) {
 	pc=addr;
 }
-template<> void Context::run(ImmVal instr,uint8_t val) {
+template<> void Context::run_instr(ImmVal instr,uint8_t val) {
 	push<u8>(val);
 	pc++;
 }
-template<> void Context::run(Call instr,uint16_t addr) {
+template<> void Context::run_instr(Call instr,uint16_t addr) {
 	push<LE::u16>(++pc);
 	pc=addr;
 }
-template<> void Context::run(CallPtr instr) {
+template<> void Context::run_instr(CallPtr instr) {
 	push<LE::u16>(++pc);
 	pc=pop<LE::u16>();
 }
-template<> void Context::run(Return instr) {
+template<> void Context::run_instr(Return instr) {
 	pc=pop<LE::u16>();
 }
-template<> void Context::run(Adjust instr,int16_t offset) {
+template<> void Context::run_instr(Adjust instr,int16_t offset) {
 	sp+=offset;
 	pc++;
 }
-template<> void Context::run(Enter instr) {
+template<> void Context::run_instr(Enter instr) {
 	push<LE::u16>(reg.get(instr.bp));
 	reg.set(instr.bp,sp);
 	pc++;
 }
-template<> void Context::run(Leave instr) {
+template<> void Context::run_instr(Leave instr) {
 	sp=reg.get(instr.bp);
 	reg.set(instr.bp,pop<LE::u16>());
 	pc++;
 }
-template<> void Context::run(Halt instr) {
+template<> void Context::run_instr(Halt instr) {
 	// halt();
 }
-template<> void Context::run(INTCall instr) {
+template<> void Context::run_instr(INTCall instr) {
 	//if(!arg.isINT()){
 	//	 inc(MReg16::PC);
 	//}

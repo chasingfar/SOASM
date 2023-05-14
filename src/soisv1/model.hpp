@@ -20,8 +20,8 @@ namespace SOASM::SOISv1{
 		Regs::RegFile reg;
 
 		template<typename Instr,typename ...Args>
-		void run(Instr,Args...);
-		bool run_instr();
+		void run_instr(Instr,Args...);
+		bool run();
 
 		template<typename T>
 		T::type imm(){

@@ -36,7 +36,7 @@ int main(){
 
     Context ctx{mem};
 	for(int i=0;i<50;i++){
-		if(!ctx.run_instr()){
+		if(!ctx.run()){
         	std::cout<<"halt"<<std::endl;
 			break;
 		}
