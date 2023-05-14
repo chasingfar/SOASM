@@ -4,7 +4,7 @@
 
 #include <utility>
 #include <cstdint>
-
+#include "../util/accessors_proxy.hpp"
 namespace SOASM::SOISv1::Regs{
 	enum struct Reg:uint8_t{
 		A  ,B  ,
@@ -27,7 +27,7 @@ namespace SOASM::SOISv1::Regs{
 	}
 
 
-	struct RegFile{
+	struct RegFile:Util::AccessorsProxy<RegFile>{
 		uint8_t regs[8];
 		uint8_t get(Reg reg) const{
 			return regs[std::to_underlying(reg)];

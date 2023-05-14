@@ -1,6 +1,5 @@
 #include "model.hpp"
 #include "instr_set.hpp"
-#include <cstdint>
 
 using namespace SOASM::SOISv1;
 
@@ -12,39 +11,39 @@ template<> void Context::run_instr(Init instr) {
 	pc=0;
 }
 template<> void Context::run_instr(LoadFar instr,int16_t offset){
-	push<u8>(mem.get(reg.get(instr.from)+offset));
+	push<u8>(mem[reg[instr.from]+offset]);
 	pc++;
 }
 template<> void Context::run_instr(SaveFar instr,int16_t offset) {
-	mem.set(reg.get(instr.to)+offset,pop<u8>());
+	mem[reg[instr.to]+offset]=pop<u8>();
 	pc++;
 }
 template<> void Context::run_instr(LoadNear instr,int8_t offset) {
-	push<u8>(mem.get(reg.get(instr.from)+offset));
+	push<u8>(mem[reg[instr.from]+offset]);
 	pc++;
 }
 template<> void Context::run_instr(SaveNear instr,int8_t offset) {
-	mem.set(reg.get(instr.to)+offset,pop<u8>());
+	mem[reg[instr.to]+offset]=pop<u8>();
 	pc++;
 }
 template<> void Context::run_instr(Load instr) {
-	push<u8>(mem.get(reg.get(instr.from)));
+	push<u8>(mem[reg[instr.from]]);
 	pc++;
 }
 template<> void Context::run_instr(Save instr) {
-	mem.set(reg.get(instr.to),pop<u8>());
+	mem[reg[instr.to]]=pop<u8>();
 	pc++;
 }
 template<> void Context::run_instr(SaveImm instr,uint8_t val) {
-	mem.set(reg.get(instr.to),val);
+	mem[reg[instr.to]]=val;
 	pc++;
 }
 template<> void Context::run_instr(Push instr) {
-	push<u8>(reg.get(instr.from));
+	push<u8>(reg[instr.from]);
 	pc++;
 }
 template<> void Context::run_instr(Pop instr) {
-	reg.set(instr.to,pop<u8>());
+	reg[instr.to]=pop<u8>();
 	pc++;
 }
 
@@ -136,13 +135,13 @@ template<> void Context::run_instr(Adjust instr,int16_t offset) {
 	pc++;
 }
 template<> void Context::run_instr(Enter instr) {
-	push<LE::u16>(reg.get(instr.bp));
-	reg.set(instr.bp,sp);
+	push<LE::u16>(reg[instr.bp]);
+	reg[instr.bp]=sp;
 	pc++;
 }
 template<> void Context::run_instr(Leave instr) {
-	sp=reg.get(instr.bp);
-	reg.set(instr.bp,pop<LE::u16>());
+	sp=reg[instr.bp];
+	reg[instr.bp]=pop<LE::u16>();
 	pc++;
 }
 template<> void Context::run_instr(Halt instr) {
