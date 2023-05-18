@@ -2,6 +2,7 @@
 #include "instr_set.hpp"
 
 using namespace SOASM::SOISv1;
+using namespace LE;
 
 template<> void Context::run_instr(Unknown instr) {
 	pc++;
@@ -120,28 +121,28 @@ template<> void Context::run_instr(ImmVal instr,uint8_t val) {
 	pc++;
 }
 template<> void Context::run_instr(Call instr,uint16_t addr) {
-	push<LE::u16>(++pc);
+	push<u16>(++pc);
 	pc=addr;
 }
 template<> void Context::run_instr(CallPtr instr) {
-	push<LE::u16>(++pc);
-	pc=pop<LE::u16>();
+	push<u16>(++pc);
+	pc=pop<u16>();
 }
 template<> void Context::run_instr(Return instr) {
-	pc=pop<LE::u16>();
+	pc=pop<u16>();
 }
 template<> void Context::run_instr(Adjust instr,int16_t offset) {
 	sp+=offset;
 	pc++;
 }
 template<> void Context::run_instr(Enter instr) {
-	push<LE::u16>(reg[instr.bp]);
+	push<u16>(reg[instr.bp]);
 	reg[instr.bp]=sp;
 	pc++;
 }
 template<> void Context::run_instr(Leave instr) {
 	sp=reg[instr.bp];
-	reg[instr.bp]=pop<LE::u16>();
+	reg[instr.bp]=pop<u16>();
 	pc++;
 }
 template<> void Context::run_instr(Halt instr) {
