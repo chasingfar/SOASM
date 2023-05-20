@@ -13,11 +13,12 @@
 
 namespace SOASM{
 	struct Lazy{
-		std::shared_ptr<size_t> ptr;
+		using val_t=std::optional<size_t>;
+		std::shared_ptr<val_t> ptr;
 		size_t offset;
 		std::function<unsigned long long(size_t,size_t)> fn;
 		uint8_t operator()(size_t pc) const{
-			return (fn(*ptr,pc)>>offset)&0xffull;
+			return (fn(ptr->value(),pc)>>offset)&0xffull;
 		}
 	};
 	using may_lazy_t=std::variant<uint8_t,Lazy>;
@@ -25,16 +26,21 @@ namespace SOASM{
 	using bytes_t=std::vector<uint8_t>;
 
 	struct Label{
+		using val_t=std::optional<size_t>;
 		using tbl_t=std::map<std::string,Label>;
 		static tbl_t tbl; 
 
-		std::shared_ptr<size_t> ptr;
-		explicit Label(size_t addr=0) : ptr(std::make_shared<size_t>(addr)) {}
-		explicit Label(std::string name,size_t addr=0) : ptr(std::make_shared<size_t>(addr)) {
+		std::shared_ptr<val_t> ptr;
+		explicit Label(val_t addr={}) : ptr(std::make_shared<val_t>(addr)) {}
+		explicit Label(std::string name,val_t addr={}) : Label(addr) {
 			tbl[name]=*this;
 		}
-		void set(size_t v) const {
+		const Label& set(size_t v) const {
 			*ptr = v;
+			return *this;
+		}
+		val_t get() const {
+			return *ptr;
 		}
 		operator Lazy(){
 			return lazy();
@@ -143,7 +149,7 @@ namespace SOASM{
 			using arg_type=std::variant<uint8_t,Lazy,Label,bytes_t,data_t,Code>;
 			std::vector<val_type> codes;
 			void add(std::integral auto val){
-				codes.emplace_back(val&0xff);
+				codes.emplace_back(static_cast<uint8_t>(val&0xffu));
 			}
 			template<typename T> requires std::same_as<T,Lazy> || std::same_as<T,Label>
 			void add(const T& val){
@@ -187,13 +193,19 @@ namespace SOASM{
 				return sum;
 			}
 
-			data_t resolve(size_t start=0) const{
+			data_t resolve(size_t start=0,uint8_t padding=0xff) const{
 				data_t data{};
 				data.reserve(size());
 				for (const auto &code:codes) {
 					std::visit(Util::overloaded{
 						[&](const auto&  fn)    { data.emplace_back(fn); },
-						[&](const Label& label) { label.set(start+data.size()); },
+						[&](const Label& label) {
+							if(auto addr=label.get();addr){
+								data.resize(*addr-start,padding);
+							}else{
+								label.set(start+data.size());
+							}
+						},
 					}, code);
 				}
 				return data;
