@@ -3,7 +3,7 @@
 #define SOASM_SOISV1_INSTR_SET_HPP
 
 #include <cstddef>
-#include "../asm.hpp"
+#include "../types.hpp"
 #include "../instr_set.hpp"
 #include "regs.hpp"
 
