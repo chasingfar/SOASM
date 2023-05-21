@@ -32,7 +32,9 @@ int main(){
 		LT["end"],
 		Halt{}(),
 	};
-    std::ranges::move(program.assemble(),mem.begin());
+	auto data=program.assemble();
+	ASM<SOISv1::InstrSet>::Code::disassemble(std::cout,data);
+    std::ranges::move(data,mem.begin());
 
     Context ctx{mem};
 	for(int i=0;i<50;i++){

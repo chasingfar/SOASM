@@ -4,6 +4,8 @@
 
 #include "types.hpp"
 #include "util/overloaded.hpp"
+#include <iostream>
+#include <format>
 
 namespace SOASM{
 
@@ -92,8 +94,15 @@ namespace SOASM{
 			bytes_t assemble(size_t start=0) const{
 				return assemble(resolve(start));
 			}
-			static auto disassemble(bytes_t data){
-				InstrSet::instr_ts
+			static void disassemble(std::ostream& os,bytes_t data){
+				for (size_t pc = 0; pc < data.size(); ++pc) {
+					InstrSet::visit([&](auto instr){
+						using T=decltype(instr);
+						auto arg_raws=T::args_t::from_bytes(std::span{data}.subspan(pc+1));
+						os<<std::format("{}:{} {}\n",pc,instr.to_string(),arg_raws);
+						pc+=T::args_t::size;
+					},data[pc]);
+				}
 			}
 		};
 	};
