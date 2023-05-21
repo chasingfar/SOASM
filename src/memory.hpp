@@ -23,6 +23,14 @@ namespace SOASM::Models{
 		void set(size_t addr,uint8_t v){
 			overlay[addr]=v;
 		}
+		template<size_t size>
+		std::array<uint8_t,size> get_bytes(size_t addr) const{
+			std::array<uint8_t,size> data;
+			for(auto&& d:data){
+				d=get(addr++);
+			}
+			return data;
+		}
 	};
 } // SOASM
 
