@@ -1,5 +1,6 @@
 #include "model.hpp"
 #include "instr_set.hpp"
+#include <utility>
 
 using namespace SOASM::SOISv1;
 using namespace LE;
@@ -7,8 +8,8 @@ using namespace LE;
 template<> void Context::run_instr(Unknown instr) {
 	pc++;
 }
-template<> void Context::run_instr(Init instr) {
-	pc=0;
+template<> void Context::run_instr(Reset instr) {
+	pc=std::to_underlying(instr.val)<<2;
 }
 template<> void Context::run_instr(LoadFar instr,int16_t offset){
 	push<u8>(mem[reg[instr.from]+offset]);
@@ -147,11 +148,11 @@ template<> void Context::run_instr(Leave instr) {
 template<> void Context::run_instr(Halt instr) {
 	// halt();
 }
-template<> void Context::run_instr(INTCall instr) {
+//template<> void Context::run_instr(INTCall instr) {
 	//if(!arg.isINT()){
 	//	 inc(MReg16::PC);
 	//}
 	//stack_push(MReg16::PC);
 	//load_imm(MReg16::PC,arg.isINT());
 	//jump(MReg16::TMP);
-}
+//}

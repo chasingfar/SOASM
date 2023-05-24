@@ -166,19 +166,24 @@ namespace SOASM::SOISv1{
 	};
 
 	
-	struct INTCall:Instr<INTCall>{
-		static constexpr raw_t reserve_id=0xCD;
-		static constexpr std::string_view name="INTCall";
-		
-		#define X_OPTS
-		#include "../x_opts.inc"
-	};
+	//struct INTCall:Instr<INTCall>{
+	//	static constexpr raw_t reserve_id=0xCD;
+	//	static constexpr std::string_view name="INTCall";
+	//	
+	//	#define X_OPTS
+	//	#include "../x_opts.inc"
+	//};
 	
-	struct Init:Instr<Init>{
+	struct Reset:Instr<Reset>{
 		static constexpr raw_t reserve_id=0x00;
-		static constexpr std::string_view name="Init";
+		static constexpr std::string_view name="Reset";
 		
-		#define X_OPTS
+		enum struct Val:raw_t{
+			RST0,RST1,RST2,RST3,
+			RST4,RST5,RST6,RST7,
+		};
+
+		#define X_OPTS X(Val,val)
 		#include "../x_opts.inc"
 	};
 	
@@ -198,8 +203,8 @@ namespace SOASM::SOISv1{
 	};
 	using InstrSet=InstrSet::InstrSet<
 		u8::type,Unknown,
-		Init,
-		INTCall,
+		Reset,
+		//INTCall,
 		LoadFar,SaveFar,
 		LoadNear,SaveNear,
 		Load,Save,
