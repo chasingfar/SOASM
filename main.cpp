@@ -33,7 +33,13 @@ int main(){
 		Halt{}(),
 	};
 	auto data=program.assemble();
-	ASM<SOISv1::InstrSet>::Code::disassemble(std::cout,data);
+	for(auto [addr,bytes,str]:ASM<SOISv1::InstrSet>::Code::disassemble(data)){
+		std::string bytes_str;
+		for(auto b:bytes){
+			bytes_str+=std::bitset<8>(b).to_string()+" ";
+		}
+		std::cout<<std::format("{0:016b}:{1:27};{0}:{2}\n",addr,bytes_str,str);
+	}
     std::ranges::move(data,mem.begin());
 
     Context ctx{mem};

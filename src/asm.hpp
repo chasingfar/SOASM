@@ -94,15 +94,16 @@ namespace SOASM{
 			bytes_t assemble(size_t start=0) const{
 				return assemble(resolve(start));
 			}
-			static void disassemble(std::ostream& os,bytes_t data){
+			static auto disassemble(std::span<uint8_t> data){
+				std::vector<std::tuple<size_t,std::span<uint8_t>,std::string>> ret;
 				for (size_t pc = 0; pc < data.size(); ++pc) {
-					InstrSet::visit([&](auto instr){
-						using T=decltype(instr);
-						auto arg_raws=T::args_t::from_bytes(std::span{data}.subspan(pc+1));
-						os<<std::format("{}:{} {}\n",pc,instr.to_string(),arg_raws);
+					InstrSet::visit([&]<typename T>(T instr){
+						auto arg_raws=T::args_t::from_bytes(data.subspan(pc+1));
+						ret.emplace_back(pc,data.subspan(pc,T::size),std::format("{} {}",instr.to_string(),arg_raws));
 						pc+=T::args_t::size;
 					},data[pc]);
 				}
+				return ret;
 			}
 		};
 	};
