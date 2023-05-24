@@ -11,7 +11,7 @@
 #define X(type,name) -InstrSet::opt_width<type>()
 	raw_t id:sizeof(raw_t)*CHAR_BIT X_OPTS;
 #undef X
-#define X(type,name) + " " + std::string(magic_enum::enum_name(name))
+#define X(type,name) + " " + InstrSet::opt_string(name)
 	std::string to_string() const{
 		return std::string(name) X_OPTS;
 	}

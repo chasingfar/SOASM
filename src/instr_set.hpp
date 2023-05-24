@@ -11,6 +11,14 @@
 
 namespace SOASM{
 	namespace InstrSet{
+		template<typename T> requires requires(T v){{std::to_string(v)};}
+		std::string opt_string(T opt){
+			return std::to_string(opt);
+		}
+		template<typename T> requires std::is_enum_v<T>
+		std::string opt_string(T opt){
+			return std::string(magic_enum::enum_name(opt));
+		}
 		template<typename T>
 		static constexpr size_t opt_width(){
 			if constexpr (std::is_enum_v<T>){
