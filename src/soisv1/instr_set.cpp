@@ -8,7 +8,6 @@ template<> void Context::run_instr(Unknown instr) {
 	pc++;
 }
 template<> void Context::run_instr(Init instr) {
-	sp=0xFFFF;
 	pc=0;
 }
 template<> void Context::run_instr(LoadFar instr,int16_t offset){
