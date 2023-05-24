@@ -148,7 +148,7 @@ namespace SOASM{
 	struct InstrBase{
 		using raw_t = Raw::type;
 		using args_t = InstrArgs<Args...>;
-		static constexpr size_t size = sizeof(Raw::size) + args_t::size;
+		static constexpr size_t size = Raw::size + args_t::size;
 		struct Record{
 			Instr instr;
 			args_t::raws_t args;
