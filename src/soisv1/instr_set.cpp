@@ -8,6 +8,9 @@ using namespace LE;
 template<> void Context::run_instr(Unknown instr) {
 	pc++;
 }
+template<> void Context::run_instr(NOP instr) {
+	pc++;
+}
 template<> void Context::run_instr(Reset instr) {
 	pc=std::to_underlying(instr.val)<<2;
 }
