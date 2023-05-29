@@ -4,7 +4,7 @@
 
 #include <cstddef>
 #include "../types.hpp"
-#include "../instr_set.hpp"
+#include "../instr_set_util.hpp"
 #include "regs.hpp"
 
 namespace SOASM::SOISv1{
@@ -199,7 +199,7 @@ namespace SOASM::SOISv1{
 		#define X_OPTS
 		#include "../x_opts.inc"
 	};
-	using InstrSet=InstrSet::InstrSet<
+	using InstrSet=InstrSetUtil::InstrSet<
 		u8::type,Unknown,
 		Reset,
 		LoadFar,SaveFar,
