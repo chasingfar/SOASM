@@ -200,7 +200,7 @@ namespace SOASM::SOISv1{
 		#include "../x_opts.inc"
 	};
 	using InstrSet=InstrSetUtil::InstrSet<
-		u8::type,Unknown,
+		Unknown,
 		Reset,
 		LoadFar,SaveFar,
 		LoadNear,SaveNear,

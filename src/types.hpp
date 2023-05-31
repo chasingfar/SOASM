@@ -146,6 +146,7 @@ namespace SOASM{
 
 	template<typename Raw,typename Instr,typename ...Args>
 	struct InstrBase{
+		using raw = Raw;
 		using raw_t = Raw::type;
 		using args_t = InstrArgs<Args...>;
 		static constexpr size_t size = Raw::size + args_t::size;
@@ -160,6 +161,9 @@ namespace SOASM{
 		}
 		Raw to_raw() const{
 			return std::bit_cast<raw_t>(*this);
+		}
+		static Instr from_bytes(std::span<uint8_t,raw::size> data){
+			return std::bit_cast<Instr>(static_cast<raw_t>(Raw::from_bytes(data)));
 		}
 		auto operator()(Args... args){
 			Instr instr=*static_cast<Instr*>(this);

@@ -45,9 +45,11 @@ namespace SOASM::InstrSetUtil{
 	template <typename T>
 	concept has_reserved_id = requires(T) {{T::reserve_id};};
 
-	template<typename instr_t,typename Unknown,typename ...T>
+	template<typename Unknown,typename ...T>
 	struct InstrSet{
-		using instr_ts=std::variant<T...>;
+		using raw=Unknown::raw;
+		using raw_t=raw::type;
+		using instr_ts=std::variant<Unknown,T...>;
 		static constexpr auto get_reserved_ids(){
 			std::vector<std::pair<size_t,size_t>> reserved_ids;
 			([&]<typename V>(V){
@@ -92,34 +94,29 @@ namespace SOASM::InstrSetUtil{
 			return get_id_impl<U,T...>(0)>>U::optw;
 		}
 		template<typename U>
-		static auto to_instr(instr_t instr){
+		static auto to_instr(raw_t instr){
 			return std::bit_cast<U>(instr);
 		}
 		template<typename U>
-		static bool is_instr(instr_t instr){
+		static bool is_instr(raw_t instr){
 			return get_id<U>()==to_instr<U>(instr).id;
 		}
-		
-		template<instr_t instr>
-		using get_instr=decltype(std::tuple_cat(
-			std::conditional_t<is_instr<T>(instr), 
-				std::tuple<T>, std::tuple<>
-			>{}...));
-		
-		template<typename F,typename V,typename ...U>
-		static auto visit_impl(F&& vis,instr_t instr){
+		template<typename V,typename ...U>
+		static instr_ts get_instr_impl(raw_t instr){
 			if(is_instr<V>(instr)){
-				return vis(to_instr<V>(instr));
+				return to_instr<V>(instr);
 			}
 			if constexpr(sizeof...(U)>0){
-				return visit_impl<F,U...>(std::forward<F>(vis),instr);
+				return get_instr_impl<U...>(instr);
 			}else{
-				return vis(to_instr<Unknown>(instr));
+				return to_instr<Unknown>(instr);
 			}
 		}
-		template<typename F>
-		static auto visit(F&& vis,instr_t instr){
-			return visit_impl<F,T...>(std::forward<F>(vis),instr);
+		static instr_ts get_instr(raw_t data){
+			return get_instr_impl<T...>(data);
+		}
+		static instr_ts get_instr(std::span<uint8_t> data){
+			return get_instr(raw::from_bytes(data));
 		}
 		static auto list_instr(){
 			return std::vector{
