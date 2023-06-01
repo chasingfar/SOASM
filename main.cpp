@@ -9,7 +9,7 @@ int main(){
     using namespace SOISv1;
     std::array<uint8_t,1<<16> mem;
     Label::tbl_t LT;
-	ASM<SOISv1::InstrSet>::Code program{
+	Code program{
 		ImmVal{}(3),
 		Pop{.to=Reg::A}(),
 		ImmVal{}(0),
@@ -33,7 +33,7 @@ int main(){
 		Halt{}(),
 	};
 	auto data=program.assemble();
-	for(auto [addr,bytes,str]:ASM<SOISv1::InstrSet>::Code::disassemble(data)){
+	for(auto [addr,bytes,str]:ASM<SOISv1::InstrSet>::disassemble(data)){
 		std::string bytes_str;
 		for(auto b:bytes){
 			bytes_str+=std::bitset<8>(b).to_string()+" ";

@@ -2,6 +2,7 @@
 #ifndef SOASM_TYPES_HPP
 #define SOASM_TYPES_HPP
 
+#include "util/overloaded.hpp"
 #include <cstddef>
 #include <optional>
 #include <memory>
@@ -120,6 +121,84 @@ namespace SOASM{
 		} // BE
 	} // RawTypes
 
+	template<typename T>
+	concept CanToCode=requires (T x){x.to_code();};
+
+	struct Code{
+		using val_type=std::variant<uint8_t,Lazy,Label>;
+
+		std::vector<val_type> codes;
+		void add(std::integral auto val){
+			codes.emplace_back(static_cast<uint8_t>(val&0xffu));
+		}
+		template<typename T> requires std::same_as<T,Lazy> || std::same_as<T,Label>
+		void add(const T& val){
+			codes.emplace_back(val);
+		}
+		void add(std::ranges::range auto&& range){
+			std::ranges::move(range|std::views::transform([](auto c){
+				return std::visit([](auto v)->val_type{return v;},c);
+			}), std::back_inserter(codes));
+		}
+		void add(CanToCode auto&& code){
+			add(code.to_code());
+		}
+		template<typename ...Ts>
+		Code(Ts&&... code){
+			(add(code),...);
+		}
+		auto begin(){return codes.begin();}
+		auto end(){return codes.end();}
+		auto begin() const{return codes.begin();}
+		auto end() const{return codes.end();}
+
+		static size_t count(const val_type& code){
+			if(std::get_if<Label>(&code)){
+				return 0;
+			}
+			return 1;
+		}
+		size_t size() const{
+			size_t sum=0;
+			for (const auto &code:codes) {
+				sum+=count(code);
+			}
+			return sum;
+		}
+
+		data_t resolve(size_t start=0,uint8_t padding=0xff) const{
+			data_t data{};
+			data.reserve(size());
+			for (const auto &code:codes) {
+				std::visit(Util::overloaded{
+					[&](const auto&  fn)    { data.emplace_back(fn); },
+					[&](const Label& label) {
+						if(auto addr=label.get();addr){
+							data.resize(*addr-start,padding);
+						}else{
+							label.set(start+data.size());
+						}
+					},
+				}, code);
+			}
+			return data;
+		}
+		static bytes_t assemble(data_t data){
+			bytes_t bytes;
+			bytes.reserve(data.size());
+			for (auto &code:data) {
+				bytes.emplace_back(std::visit(Util::overloaded{
+					[&](const Lazy &lazy) { return lazy(bytes.size()); },
+					[&](uint8_t v) { return v; },
+				}, code));
+			}
+			return bytes;
+		}
+		bytes_t assemble(size_t start=0) const{
+			return assemble(resolve(start));
+		}
+	};
+
 	template<typename ...Args>
 	struct InstrArgs{
 		static constexpr size_t num = sizeof...(Args);
@@ -144,6 +223,8 @@ namespace SOASM{
 		}
 	};
 
+	static inline Code instr_to_code(auto instr,const data_t& arg);
+
 	template<typename Raw,typename Instr,typename ...Args>
 	struct InstrBase{
 		using raw = Raw;
@@ -156,22 +237,25 @@ namespace SOASM{
 		};
 
 		template<typename InstrSet>
-		void set_id(){
-			static_cast<Instr*>(this)->id=InstrSet::template get_id<Instr>();
+		Instr set_id(){
+			Instr instr=*static_cast<Instr*>(this);
+			instr.id=InstrSet::template get_id<Instr>();
+			return instr;
 		}
-		Raw to_raw() const{
+		raw_t to_raw() const{
 			return std::bit_cast<raw_t>(*this);
 		}
 		static Instr from_bytes(std::span<uint8_t,raw::size> data){
 			return std::bit_cast<Instr>(static_cast<raw_t>(Raw::from_bytes(data)));
 		}
-		auto operator()(Args... args){
+		Code operator()(Args... args){
 			Instr instr=*static_cast<Instr*>(this);
 			data_t data{};
 			(std::ranges::move(args.may_lazys(), std::back_inserter(data)),...);
-			return std::pair{instr,data};
+			return instr_to_code(instr,data);
 		}
 	};
+
 }
 
 #endif //SOASM_TYPES_HPP

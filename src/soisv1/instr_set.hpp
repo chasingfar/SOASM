@@ -216,5 +216,9 @@ namespace SOASM::SOISv1{
 		Halt
 	>;
 } // SOASM::SOISv1
-
+namespace SOASM{
+	static inline Code instr_to_code(auto instr,const data_t& arg){
+		return {instr.template set_id<SOISv1::InstrSet>().to_raw(),arg};
+	}
+}
 #endif //SOASM_SOISV1_INSTR_SET_HPP
