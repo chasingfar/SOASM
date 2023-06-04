@@ -20,5 +20,23 @@ namespace SOASM{
 		}
 		return ret;
 	}
+	struct CodeBlock{
+		Label start;
+		Code body{};
+		Label end;
+
+		Code to_code() const{
+			return {start,body,end};
+		}
+	};
+	struct DataBlock{
+		Label start;
+		data_t body{};
+		Label end;
+
+		Code to_code() const{
+			return {start,body,end};
+		}
+	};
 }
 #endif //SOASM_ASM_HPP
