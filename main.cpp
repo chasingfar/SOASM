@@ -1,6 +1,6 @@
 #include <soasm/soisv1.hpp>
-#include "src/asm.hpp"
-#include "src/soisv1/model.hpp"
+#include "soasm/asm.hpp"
+#include "soasm/soisv1/model.hpp"
 #include <iostream>
 
 using namespace SOASM;
@@ -33,7 +33,7 @@ int main(){
 		Halt{}(),
 	};
 	auto data=program.assemble();
-	for(auto [addr,bytes,str]:ASM<SOISv1::InstrSet>::disassemble(data)){
+	for(auto [addr,bytes,str]:disassemble<SOISv1::InstrSet>(data)){
 		std::string bytes_str;
 		for(auto b:bytes){
 			bytes_str+=std::bitset<8>(b).to_string()+" ";

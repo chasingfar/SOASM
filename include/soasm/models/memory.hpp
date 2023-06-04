@@ -5,7 +5,7 @@
 #include <cstddef>
 #include <memory>
 #include <map>
-#include "util/accessors_proxy.hpp"
+#include "../util/accessors_proxy.hpp"
 
 namespace SOASM::Models{
 	template<size_t Size>

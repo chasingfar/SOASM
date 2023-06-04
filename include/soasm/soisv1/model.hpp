@@ -6,7 +6,7 @@
 #include <memory>
 #include <map>
 #include <ranges>
-#include "../memory.hpp"
+#include "soasm/models/memory.hpp"
 #include "instr_set.hpp"
 
 namespace SOASM::SOISv1{

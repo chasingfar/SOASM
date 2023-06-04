@@ -1,5 +1,5 @@
-#include "model.hpp"
-#include "instr_set.hpp"
+#include "soasm/soisv1/model.hpp"
+#include "soasm/soisv1/instr_set.hpp"
 #include <utility>
 
 using namespace SOASM::SOISv1;

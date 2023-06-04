@@ -1,4 +1,4 @@
-#include "model.hpp"
+#include "soasm/soisv1/model.hpp"
 
 using namespace SOASM::SOISv1;
 
