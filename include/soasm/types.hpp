@@ -134,10 +134,14 @@ namespace SOASM{
 		void add(const T& val){
 			codes.emplace_back(val);
 		}
+		template<typename ...Ts>
+		void add(const std::variant<Ts...>& val){
+			codes.emplace_back(std::visit([](auto v)->val_type{return v;},val));
+		}
 		void add(std::ranges::range auto&& range){
-			std::ranges::move(range|std::views::transform([](auto c){
-				return std::visit([](auto v)->val_type{return v;},c);
-			}), std::back_inserter(codes));
+			for(auto val:range){
+				add(val);
+			}
 		}
 		void add(CanToCode auto&& code){
 			add(code.to_code());
