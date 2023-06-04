@@ -127,24 +127,29 @@ namespace SOASM{
 		using val_type=std::variant<uint8_t,Lazy,Label>;
 
 		std::vector<val_type> codes;
-		void add(std::integral auto val){
+		Code& add(std::integral auto val){
 			codes.emplace_back(static_cast<uint8_t>(val&0xffu));
+			return *this;
 		}
 		template<typename T> requires std::same_as<T,Lazy> || std::same_as<T,Label>
-		void add(const T& val){
+		Code& add(const T& val){
 			codes.emplace_back(val);
+			return *this;
 		}
 		template<typename ...Ts>
-		void add(const std::variant<Ts...>& val){
+		Code& add(const std::variant<Ts...>& val){
 			codes.emplace_back(std::visit([](auto v)->val_type{return v;},val));
+			return *this;
 		}
-		void add(std::ranges::range auto&& range){
+		Code& add(std::ranges::range auto&& range){
 			for(auto val:range){
 				add(val);
 			}
+			return *this;
 		}
-		void add(CanToCode auto&& code){
+		Code& add(CanToCode auto&& code){
 			add(code.to_code());
+			return *this;
 		}
 		template<typename ...Ts>
 		Code(Ts&&... code){
