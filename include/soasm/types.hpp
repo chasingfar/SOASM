@@ -19,6 +19,11 @@ namespace SOASM{
 		std::shared_ptr<val_t> ptr;
 		size_t offset;
 		std::function<unsigned long long(size_t,size_t)> fn;
+		Lazy shift(ssize_t shift_offset) const{
+			Lazy lazy{*this};
+			lazy.offset+=shift_offset;
+			return lazy;
+		}
 		uint8_t operator()(size_t pc) const{
 			return (fn(ptr->value(),pc)>>offset)&0xffull;
 		}
@@ -86,8 +91,7 @@ namespace SOASM{
 			static auto to_bytes(const Lazy& v){
 				std::array<Lazy,Size> bytes;
 				for(auto&& [byte_val,offset]:std::views::zip(bytes,offsets)){
-					byte_val=v;
-					byte_val.offset=offset;
+					byte_val=v.shift(offset);
 				}
 				return bytes;
 			}
