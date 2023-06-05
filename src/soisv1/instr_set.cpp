@@ -110,9 +110,6 @@ template<> void Context::run_instr(Logic instr) {
 #undef LOGIC_2
 	pc++;
 }
-template<> void Context::run_instr(BranchCF instr,uint16_t addr) {
-	pc=CF?addr:pc+1;
-}
 template<> void Context::run_instr(BranchZero instr,uint16_t addr) {
 	pc=(pop<u8>()==0)?addr:pc+1;
 }
@@ -146,6 +143,14 @@ template<> void Context::run_instr(Enter instr) {
 template<> void Context::run_instr(Leave instr) {
 	sp=reg[instr.bp];
 	reg[instr.bp]=pop<u16>();
+	pc++;
+}
+template<> void Context::run_instr(PushCF instr) {
+	push<u8>(CF?1:0);
+	pc++;
+}
+template<> void Context::run_instr(PopCF instr) {
+	CF= (pop<u8>() != 0);
 	pc++;
 }
 template<> void Context::run_instr(Halt instr) {

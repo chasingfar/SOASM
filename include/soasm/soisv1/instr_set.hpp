@@ -109,13 +109,6 @@ namespace SOASM::SOISv1{
 		#include "soasm/x_opts.inc"
 	};
 	
-	struct BranchCF:Instr<BranchCF,LE::u16>{
-		static constexpr std::string_view name="BranchCF";
-		
-		#define X_OPTS
-		#include "soasm/x_opts.inc"
-	};
-	
 	struct Jump:Instr<Jump,LE::u16>{
 		static constexpr std::string_view name="Jump";
 		
@@ -165,6 +158,19 @@ namespace SOASM::SOISv1{
 		#include "soasm/x_opts.inc"
 	};
 
+	struct PushCF:Instr<PushCF>{
+		static constexpr std::string_view name="PushCF";
+
+		#define X_OPTS
+		#include "soasm/x_opts.inc"
+	};
+	struct PopCF:Instr<PopCF>{
+		static constexpr std::string_view name="PopCF";
+
+		#define X_OPTS
+		#include "soasm/x_opts.inc"
+	};
+
 	struct NOP:Instr<NOP>{
 		static constexpr std::string_view name="NOP";
 		
@@ -208,10 +214,11 @@ namespace SOASM::SOISv1{
 		SaveImm,
 		Push,Pop,
 		Calc,Logic,
-		BranchCF,BranchZero,
+		BranchZero,
 		ImmVal,
 		Jump,Call,Return,
 		Adjust,Enter,Leave,CallPtr,
+		PushCF,PopCF,
 		NOP,
 		Halt
 	>;
