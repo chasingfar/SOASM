@@ -3,6 +3,8 @@
 
 using namespace SOASM;
 
+Label::tbl_t Label::tbl{};
+
 size_t Code::count(const Code::val_type &code) {
 	if(std::get_if<Label>(&code)){
 		return 0;
