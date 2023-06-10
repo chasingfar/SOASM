@@ -18,7 +18,7 @@ namespace SOASM{
 		using val_t=std::optional<size_t>;
 		std::shared_ptr<val_t> ptr;
 		size_t offset;
-		std::function<unsigned long long(size_t,size_t)> fn;
+		std::function<uintmax_t(size_t,size_t)> fn;
 		Lazy shift(ssize_t shift_offset) const{
 			Lazy lazy{*this};
 			lazy.offset+=shift_offset;
@@ -39,7 +39,7 @@ namespace SOASM{
 
 		std::shared_ptr<val_t> ptr;
 		explicit Label(val_t addr={}) : ptr(std::make_shared<val_t>(addr)) {}
-		explicit Label(std::string name,val_t addr={}) : Label(addr) {
+		explicit Label(const std::string& name,val_t addr={}) : Label(addr) {
 			tbl[name]=*this;
 		}
 		const Label& set(size_t v) const {
@@ -48,9 +48,6 @@ namespace SOASM{
 		}
 		[[nodiscard]] val_t get() const {
 			return *ptr;
-		}
-		operator Lazy(){
-			return lazy();
 		}
 		[[nodiscard]] Lazy lazy() const{
 			return Lazy{ptr,0,[](size_t addr,size_t pc){return addr;}};
@@ -69,33 +66,33 @@ namespace SOASM{
 			static constexpr size_t size=Size;
 			static constexpr auto offsets=std::views::iota(0uz,Size)|std::views::transform([](size_t i){return 8*(IsBE?Size-i-1:i);});
 
-			std::variant<unsigned long long,Lazy> val;
-			Int(std::integral auto val):val(static_cast<unsigned long long>(val)){}
+			std::variant<uintmax_t,Lazy> val;
+			Int(std::integral auto val):val(static_cast<uintmax_t>(val)){}
 			Int(std::span<uint8_t> bytes):val(from_bytes(bytes)){}
 			Int(const Lazy& lazy):val(lazy){}
 			Int(const Label& label):val(label.lazy()){}
-			static auto from_bytes(std::span<uint8_t> bytes){
-				unsigned long long v=0;
+			static uintmax_t from_bytes(std::span<uint8_t> bytes){
+				uintmax_t v=0;
 				for(auto&& [byte_val,offset]:std::views::zip(bytes,offsets)){
 					v|=(byte_val&0xffull)<<offset;
 				}
 				return v;
 			}
-			static auto to_bytes(unsigned long long v){
+			static std::array<uint8_t,Size> to_bytes(uintmax_t v){
 				std::array<uint8_t,Size> bytes;
 				for(auto&& [byte_val,offset]:std::views::zip(bytes,offsets)){
 					byte_val=static_cast<uint8_t>((v>>offset)&0xff);
 				}
 				return bytes;
 			}
-			static auto to_bytes(const Lazy& v){
+			static std::array<Lazy,Size> to_bytes(const Lazy& v){
 				std::array<Lazy,Size> bytes;
 				for(auto&& [byte_val,offset]:std::views::zip(bytes,offsets)){
 					byte_val=v.shift(offset);
 				}
 				return bytes;
 			}
-			auto may_lazys() const{
+			std::array<may_lazy_t,Size> may_lazys() const{
 				return std::visit([](auto v){
 					std::array<may_lazy_t,Size> bytes;
 					std::ranges::move(to_bytes(v),bytes.begin());
