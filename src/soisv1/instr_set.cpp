@@ -125,8 +125,9 @@ template<> void Context::run_instr(Call instr,uint16_t addr) {
 	pc=addr;
 }
 template<> void Context::run_instr(CallPtr instr) {
+	auto addr=pop<u16>();
 	push<u16>(++pc);
-	pc=pop<u16>();
+	pc=addr;
 }
 template<> void Context::run_instr(Return instr) {
 	pc=pop<u16>();
