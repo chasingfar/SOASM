@@ -25,7 +25,7 @@ namespace SOASM{
 			return lazy;
 		}
 		uint8_t operator()(size_t pc) const{
-			return (fn(ptr->value(),pc)>>offset)&0xffull;
+			return (fn(ptr?ptr->value():0,pc)>>offset)&0xffull;
 		}
 	};
 	using may_lazy_t=std::variant<uint8_t,Lazy>;
